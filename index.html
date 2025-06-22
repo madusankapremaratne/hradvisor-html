@@ -531,7 +531,7 @@
             <h2>Be the First to Know</h2>
             <p>Get notified when we launch and receive exclusive early access to our HR advisory services.</p>
             
-            <form class="email-form" name="hradvisor-notifications" method="POST" data-netlify="true" onsubmit="handleSubmit(event)" netlify>
+            <form class="email-form" name="hradvisor-notifications" method="POST" data-netlify="true" onsubmit="handleSubmit(event)" netlify data-netlify-recaptcha="true">
                 <input type="hidden" name="form-name" value="hradvisor-notifications" />
                 <input 
                     type="email" 
@@ -561,7 +561,7 @@
         <div class="popup-content">
             <div class="popup-icon">✓</div>
             <h3>Thank You!</h3>
-            <p>You're all set! We'll notify you as soon as HR Advisor launches with exclusive early access.</p>
+            <p>You're all set! We'll notify you as soon as HR Advisor launches. <br /></p>
             <button class="popup-close" onclick="closePopup()">Got it!</button>
         </div>
     </div>
