@@ -372,6 +372,106 @@
             .email-input { min-width: auto; }
             .features { grid-template-columns: 1fr; }
             .logo { width: 100px; height: 100px; }
+            .popup-content { margin: 20px; padding: 30px 20px; }
+            .popup h3 { font-size: 1.8rem; }
+        }
+
+        /* Success Popup Styles */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .popup-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+            transform: scale(0.8) translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .popup-overlay.show .popup-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .popup-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 30px;
+            color: white;
+            animation: checkmarkAnimation 0.6s ease-out 0.3s both;
+        }
+
+        .popup h3 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .popup p {
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .popup-close {
+            background: linear-gradient(135deg, #ff9a56, #ff6b35);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .popup-close:hover {
+            transform: translateY(-2px);
+        }
+
+        @keyframes checkmarkAnimation {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1) rotate(360deg);
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -386,7 +486,14 @@
         <header class="header">
             <div class="logo-container">
                 <div class="logo">
-                    <img style="max-width:100px" src="./images/main-icon.png" alt="HR Advisor Logo">
+                    <div class="logo-icon">
+                        <div class="hr-figure"></div>
+                        <div class="hr-body"></div>
+                        <div class="hr-arms">
+                            <div class="hr-arm-left"></div>
+                            <div class="hr-arm-right"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -431,9 +538,11 @@
             <h2>Be the First to Know</h2>
             <p>Get notified when we launch and receive exclusive early access to our HR advisory services.</p>
             
-            <form class="email-form" onsubmit="handleSubmit(event)">
+            <form class="email-form" name="hradvisor-notifications" method="POST" data-netlify="true" onsubmit="handleSubmit(event)">
+                <input type="hidden" name="form-name" value="hradvisor-notifications" />
                 <input 
                     type="email" 
+                    name="email"
                     class="email-input" 
                     placeholder="Enter your email address" 
                     required
@@ -454,18 +563,79 @@
         </footer>
     </div>
 
+    <!-- Success Popup -->
+    <div class="popup-overlay" id="successPopup">
+        <div class="popup-content">
+            <div class="popup-icon">✓</div>
+            <h3>Thank You!</h3>
+            <p>You're all set! We'll notify you as soon as HR Advisor launches with exclusive early access.</p>
+            <button class="popup-close" onclick="closePopup()">Got it!</button>
+        </div>
+    </div>
+
     <script>
         function handleSubmit(event) {
             event.preventDefault();
-            const email = event.target.querySelector('.email-input').value;
+            const form = event.target;
+            const email = form.querySelector('input[name="email"]').value;
+            const submitBtn = form.querySelector('.notify-btn');
             
-            // Simple validation
-            if (email) {
-                // Here you would typically send the email to your backend
-                alert('Thank you! We\'ll notify you when HR Advisor launches.');
-                event.target.querySelector('.email-input').value = '';
-            }
+            // Show loading state
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+            
+            // Submit to Netlify
+            fetch('/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(new FormData(form)).toString()
+            })
+            .then(() => {
+                // Show success popup
+                showSuccessPopup();
+                form.querySelector('input[name="email"]').value = '';
+                
+                // Reset button
+                submitBtn.textContent = 'Notify Me';
+                submitBtn.disabled = false;
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                submitBtn.textContent = 'Try Again';
+                submitBtn.disabled = false;
+                alert('Something went wrong. Please try again.');
+            });
         }
+
+        function showSuccessPopup() {
+            const popup = document.getElementById('successPopup');
+            popup.classList.add('show');
+            
+            // Auto close after 5 seconds
+            setTimeout(() => {
+                closePopup();
+            }, 5000);
+        }
+
+        function closePopup() {
+            const popup = document.getElementById('successPopup');
+            popup.classList.remove('show');
+        }
+
+        // Close popup when clicking outside
+        document.addEventListener('click', function(event) {
+            const popup = document.getElementById('successPopup');
+            if (event.target === popup) {
+                closePopup();
+            }
+        });
+
+        // Close popup with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closePopup();
+            }
+        });
 
         // Add some interactive animations
         document.addEventListener('DOMContentLoaded', function() {
